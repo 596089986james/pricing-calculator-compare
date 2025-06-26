@@ -9,14 +9,18 @@ st.caption("Compare estimated costs for analyzing video content across different
 st.sidebar.header("Input Parameters")
 
 # Embedding Inputs
-st.sidebar.subheader("Embedding Usage")
-embed_video_hours = st.sidebar.number_input("Video Embedding (hrs)", min_value=0.0, value=0.0, step=1.0)
-embed_image_k = st.sidebar.number_input("Image Embedding (per 1k)", min_value=0.0, value=0.0, step=100.0)
-embed_text_k = st.sidebar.number_input("Text Embedding (per 1k)", min_value=0.0, value=0.0, step=100.0)
+
 num_videos = st.sidebar.number_input("Number of Videos", min_value=0, value=6000, step=100)
 avg_video_duration = st.sidebar.number_input("Avg Video Duration (min)", min_value=1, value=10)
 total_video_hours = (num_videos * avg_video_duration) / 60
 st.sidebar.markdown(f"**Total Video Hours:** {total_video_hours:.2f} hr")
+
+# Embedding Inputs at bottom
+st.sidebar.divider()
+st.sidebar.subheader("Embedding Usage")
+embed_video_hours = st.sidebar.number_input("Video Embedding (hrs)", min_value=0.0, value=0.0, step=1.0)
+embed_image_k = st.sidebar.number_input("Image Embedding (per 1k)", min_value=0.0, value=0.0, step=100.0)
+embed_text_k = st.sidebar.number_input("Text Embedding (per 1k)", min_value=0.0, value=0.0, step=100.0)
 total_analyze_queries = st.sidebar.number_input("Total Analyze Queries", min_value=0, value=10000, step=100)
 avg_input_tokens = st.sidebar.number_input("Avg Input Tokens per Analyze", min_value=0, value=200)
 avg_output_tokens = st.sidebar.number_input("Avg Output Tokens per Analyze", min_value=0, value=100)
@@ -113,5 +117,4 @@ st.dataframe(unit_price_df.style.format("${:,.2f}"))
 st.header("🧮 Cost Breakdown")
 st.dataframe(breakdown_df.style.format("${:,.2f}"))
 
-st.header("📊 Total Cost")
-st.dataframe(total_cost_df.style.format("${:,.2f}"))
+
