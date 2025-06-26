@@ -47,7 +47,7 @@ unit_price_data = {
 for name in selected_competitors:
     model = competitor_pricing[name]
     unit_price_data["Video Indexing ($/hr)"].append(0.0)
-    combined_input_price = model["input"]
+    combined_input_price = model["input"]  # use only one consistent unit price as specified
     unit_price_data["Analyzed Video Cost ($/hr + $/M tokens)"].append(combined_input_price)
     unit_price_data["Text Output ($/1M tokens)"].append(model["output"])
 
@@ -64,7 +64,10 @@ for name in selected_competitors:
     model = competitor_pricing[name]
     video_indexing_row.append(0.0)
     video_input = total_video_hours * model["video"]
-    analyzed_input = total_analyze_queries * avg_input_tokens / 1_000_000 * model["input"]
+    analyzed_input = (
+        total_analyze_queries * avg_input_tokens / 1_000_000 * model["input"] +
+        total_analyze_queries * (avg_video_duration / 60) * model["input"]
+    )
     output_cost = total_analyze_queries * avg_output_tokens / 1_000_000 * model["output"]
     video_input_row.append(video_input)
     analyzed_video_row.append(analyzed_input)
