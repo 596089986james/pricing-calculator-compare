@@ -18,13 +18,14 @@ total_analyze_queries = st.sidebar.number_input("Total Analyze Queries", min_val
 avg_input_tokens = st.sidebar.number_input("Avg Input Tokens per Analyze", min_value=0, value=200)
 avg_output_tokens = st.sidebar.number_input("Avg Output Tokens per Analyze", min_value=0, value=100)
 
-# Embedding Inputs at bottom
+# Embedding Inputs
 st.sidebar.divider()
 st.sidebar.subheader("Embedding Usage")
 embed_video_hours = st.sidebar.number_input("Video Embedding (hrs)", min_value=0.0, value=0.0, step=1.0)
 embed_image_k = st.sidebar.number_input("Image Embedding (per 1k)", min_value=0.0, value=0.0, step=100.0)
 embed_text_k = st.sidebar.number_input("Text Embedding (per 1k)", min_value=0.0, value=0.0, step=100.0)
 
+# Competitor Model Pricing
 competitor_pricing = {
     "Google Embed": {"embed_video": 3.60, "embed_image": 0.10, "embed_text": 0.07},
     "Gemini 2.5 Pro (<=12min)": {"video": 1.25, "input": 1.25, "output": 10},
@@ -43,12 +44,12 @@ twelvelabs_pricing = {
     "output": 7.5 / 1_000_000  # $/token
 }
 
-# Competitor Selection
+# Model Selection
 selected_competitors = st.multiselect("Select Competitors to Compare", options=list(competitor_pricing.keys()))
 all_models = ["TwelveLabs"] + selected_competitors
 
-# Prepare Unit Price Comparison Table
-unit_price_data = {
+# Unit Price Comparison
+tunit_price_data = {
     "Video Indexing ($/hr)": [twelvelabs_pricing["index"]],
     "Analyzed Video Cost ($/hr + $/M tokens)": [twelvelabs_pricing["video"]],
     "Text Output ($/1M tokens)": [7.5],
@@ -58,48 +59,34 @@ unit_price_data = {
 }
 for name in selected_competitors:
     model = competitor_pricing[name]
-    unit_price_data["Video Indexing ($/hr)"].append(0.0)
-    unit_price_data["Analyzed Video Cost ($/hr + $/M tokens)"].append(model.get("input", 0.0))
-    unit_price_data["Text Output ($/1M tokens)"].append(model.get("output", 0.0))
-    unit_price_data["Embedding Video ($/hr)"].append(model.get("embed_video", 0.0))
-    unit_price_data["Embedding Image ($/1k)"].append(model.get("embed_image", 0.0))
-    unit_price_data["Embedding Text ($/1k)"].append(model.get("embed_text", 0.0))
-unit_price_df = pd.DataFrame(unit_price_data, index=all_models).T
+    tunit_price_data["Video Indexing ($/hr)"].append(0.0)
+    tunit_price_data["Analyzed Video Cost ($/hr + $/M tokens)"].append(model.get("input", 0.0))
+    tunit_price_data["Text Output ($/1M tokens)"].append(model.get("output", 0.0))
+    tunit_price_data["Embedding Video ($/hr)"].append(model.get("embed_video", 0.0))
+    tunit_price_data["Embedding Image ($/1k)"].append(model.get("embed_image", 0.0))
+    tunit_price_data["Embedding Text ($/1k)"].append(model.get("embed_text", 0.0))
+unit_price_df = pd.DataFrame(tunit_price_data, index=all_models).T
 
-# Prepare Cost Breakdown Table
-video_indexing_row = [total_video_hours * twelvelabs_pricing["index"]]
-analyzed_video_row = [
-    total_analyze_queries * (avg_video_duration / 60) * twelvelabs_pricing["video"]\]
-text_output_row = [
-    total_analyze_queries * avg_output_tokens * twelvelabs_pricing["output"]\]
-embed_costs = [embed_video_hours * 2.5 + embed_image_k * 0.1 + embed_text_k * 0.07]
-total_row = [video_indexing_row[0] + analyzed_video_row[0] + text_output_row[0] + embed_costs[0]]
+# Cost Breakdown
+tvideo_indexing_row = [total_video_hours * twelvelabs_pricing["index"]]
+tanalyzed_video_row = [total_analyze_queries * (avg_video_duration / 60) * twelvelabs_pricing["video"]]
+ttext_output_row = [total_analyze_queries * avg_output_tokens * twelvelabs_pricing["output"]]
+tembed_costs = [embed_video_hours * 2.5 + embed_image_k * 0.1 + embed_text_k * 0.07]
 
 for name in selected_competitors:
     model = competitor_pricing[name]
-    video_indexing_row.append(0.0)
-    analyzed_input = (
-        total_analyze_queries * avg_input_tokens / 1_000_000 * model.get("input", 0.0) +
-        total_analyze_queries * (avg_video_duration / 60) * model.get("input", 0.0)
-    )
-    analyzed_video_row.append(analyzed_input)
-    text_output_row.append(
-        total_analyze_queries * avg_output_tokens / 1_000_000 * model.get("output", 0.0)
-    )
-    embed_costs.append(
-        embed_video_hours * model.get("embed_video", 0.0) +
-        embed_image_k * model.get("embed_image", 0.0) +
-        embed_text_k * model.get("embed_text", 0.0)
-    )
-    total_row.append(
-        analyzed_input + text_output_row[-1] + embed_costs[-1]
-    )
+    tvideo_indexing_row.append(0.0)
+    # competitor analyze cost = token+duration at input rate
+    comp_analyze = (total_analyze_queries * avg_input_tokens / 1_000_000 + total_analyze_queries * (avg_video_duration / 60)) * model.get("input", 0.0)
+    tanalyzed_video_row.append(comp_analyze)
+    ttext_output_row.append(total_analyze_queries * avg_output_tokens / 1_000_000 * model.get("output", 0.0))
+    tembed_costs.append(embed_video_hours * model.get("embed_video", 0.0) + embed_image_k * model.get("embed_image", 0.0) + embed_text_k * model.get("embed_text", 0.0))
 
 breakdown_df = pd.DataFrame({
-    "Video Indexing Cost": video_indexing_row,
-    "Analyzed Video Cost": analyzed_video_row,
-    "Text Output Cost": text_output_row,
-    "Embedding Cost": embed_costs,
+    "Video Indexing Cost": tvideo_indexing_row,
+    "Analyzed Video Cost": tanalyzed_video_row,
+    "Text Output Cost": ttext_output_row,
+    "Embedding Cost": tembed_costs,
 }, index=all_models).T
 
 # Display Tables
