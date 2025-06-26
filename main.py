@@ -32,48 +32,48 @@ twelvelabs_pricing = {
 # Competitor Selection
 selected_competitors = st.multiselect("Select Competitors to Compare", options=list(competitor_pricing.keys()))
 
+all_models = ["TwelveLabs"] + selected_competitors
+
 # Prepare Unit Price Comparison Table
 unit_price_data = {
-    "TwelveLabs": {
-        "Video Input ($/hr)": 0.0,
-        "Analyzed Video ($/hr)": twelvelabs_pricing["video"],
-        "Text Output ($/1M tokens)": 7.5
-    }
+    "Video Input ($/hr)": [0.0],
+    "Analyzed Video ($/hr)": [twelvelabs_pricing["video"]],
+    "Text Output ($/1M tokens)": [7.5],
 }
 for name in selected_competitors:
     model = competitor_pricing[name]
-    unit_price_data[name] = {
-        "Video Input ($/hr)": model["video"],
-        "Analyzed Video ($/hr)": 0.0,
-        "Text Output ($/1M tokens)": model["output"]
-    }
-unit_price_df = pd.DataFrame(unit_price_data).T
+    unit_price_data["Video Input ($/hr)"].append(model["video"])
+    unit_price_data["Analyzed Video ($/hr)"].append(0.0)
+    unit_price_data["Text Output ($/1M tokens)"].append(model["output"])
+unit_price_df = pd.DataFrame(unit_price_data, index=all_models).T
 
 # Prepare Cost Breakdown Table
-breakdown_data = {
-    "TwelveLabs": {
-        "Video Input Cost": 0.0,
-        "Analyzed Video Cost": total_analyze_queries * (avg_video_duration / 60) * twelvelabs_pricing["video"],
-        "Video Indexing Cost": index_video_hours * twelvelabs_pricing["video"],
-        "Text Output Cost": total_analyze_queries * avg_output_tokens * twelvelabs_pricing["output"]
-    }
-}
-breakdown_data["TwelveLabs"]["Total Cost"] = sum(breakdown_data["TwelveLabs"].values())
+video_input_row = [0.0]
+analyzed_video_row = [total_analyze_queries * (avg_video_duration / 60) * twelvelabs_pricing["video"]]
+video_indexing_row = [index_video_hours * twelvelabs_pricing["video"]]
+text_output_row = [total_analyze_queries * avg_output_tokens * twelvelabs_pricing["output"]]
+total_row = [video_input_row[0] + analyzed_video_row[0] + video_indexing_row[0] + text_output_row[0]]
 
 for name in selected_competitors:
     model = competitor_pricing[name]
-    breakdown_data[name] = {
-        "Video Input Cost": total_analyze_queries * (avg_video_duration / 60) * model["video"],
-        "Analyzed Video Cost": 0.0,
-        "Video Indexing Cost": 0.0,
-        "Text Output Cost": total_analyze_queries * avg_output_tokens / 1_000_000 * model["output"]
-    }
-    breakdown_data[name]["Total Cost"] = sum(breakdown_data[name].values())
+    video_input = total_analyze_queries * (avg_video_duration / 60) * model["video"]
+    analyzed_video_row.append(0.0)
+    video_indexing_row.append(0.0)
+    text_output = total_analyze_queries * avg_output_tokens / 1_000_000 * model["output"]
+    video_input_row.append(video_input)
+    text_output_row.append(text_output)
+    total_row.append(video_input + text_output)
 
-breakdown_df = pd.DataFrame(breakdown_data).T
+breakdown_df = pd.DataFrame({
+    "Video Input Cost": video_input_row,
+    "Analyzed Video Cost": analyzed_video_row,
+    "Video Indexing Cost": video_indexing_row,
+    "Text Output Cost": text_output_row,
+    "Total Cost": total_row,
+}, index=all_models).T
 
 # Prepare Total Cost Table
-total_cost_df = breakdown_df[["Total Cost"]].T
+total_cost_df = pd.DataFrame({model: [cost] for model, cost in zip(all_models, total_row)}, index=["Total Cost"])
 
 # Display Tables
 st.header("🔍 Unit Price Comparison")
