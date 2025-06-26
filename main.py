@@ -9,7 +9,7 @@ st.caption("Compare estimated costs for analyzing video content across different
 st.sidebar.header("Input Parameters")
 index_video_hours = st.sidebar.number_input("Index Video Hours", min_value=0, value=1000, step=100)
 total_analyze_queries = st.sidebar.number_input("Total Analyze Queries", min_value=0, value=10000, step=100)
-avg_input_tokens = st.sidebar.number_input("Avg Input Tokens per Analyze (Competitor)", min_value=0, value=200)
+avg_input_tokens = st.sidebar.number_input("Avg Input Tokens per Analyze", min_value=0, value=200)
 avg_video_duration = st.sidebar.number_input("Avg Video Duration (min)", min_value=1, value=10)
 avg_output_tokens = st.sidebar.number_input("Avg Output Tokens per Analyze", min_value=0, value=100)
 
@@ -26,7 +26,7 @@ competitor_pricing = {
 
 # TwelveLabs Pricing
 twelvelabs_pricing = {
-    "video": 2.5,  # $/hr for analyzed video
+    "video": 1.25,  # $/hr for analyzed video
     "index": 2.5,  # $/hr for indexing
     "output": 7.5 / 1_000_000  # $/token
 }
@@ -40,7 +40,7 @@ all_models = ["TwelveLabs"] + selected_competitors
 unit_price_data = {
     "Video Indexing ($/hr)": [twelvelabs_pricing["index"]],
     "Video Input ($/hr)": [0.0],
-    "Analyzed Video ($/hr or $/M tokens)": [twelvelabs_pricing["video"]],
+    "Analyzed Video ($/hr or $/M tokens)": [1.25],
     "Text Output ($/1M tokens)": [7.5],
 }
 for name in selected_competitors:
