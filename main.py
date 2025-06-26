@@ -32,25 +32,55 @@ twelvelabs_pricing = {
 # Competitor Selection
 selected_competitors = st.multiselect("Select Competitors to Compare", options=list(competitor_pricing.keys()))
 
-# Calculation
-comparison = {
+# Prepare Unit Price Comparison Table
+unit_price_data = {
     "TwelveLabs": {
-        "Indexing Cost": index_video_hours * twelvelabs_pricing["video"],
-        "Output Token Cost": total_analyze_queries * avg_output_tokens * twelvelabs_pricing["output"],
+        "Video Input ($/hr)": 0.0,
+        "Analyzed Video ($/hr)": twelvelabs_pricing["video"],
+        "Text Output ($/1M tokens)": 7.5
     }
 }
-comparison["TwelveLabs"]["Total Cost"] = sum(comparison["TwelveLabs"].values())
+for name in selected_competitors:
+    model = competitor_pricing[name]
+    unit_price_data[name] = {
+        "Video Input ($/hr)": model["video"],
+        "Analyzed Video ($/hr)": 0.0,
+        "Text Output ($/1M tokens)": model["output"]
+    }
+unit_price_df = pd.DataFrame(unit_price_data).T
+
+# Prepare Cost Breakdown Table
+breakdown_data = {
+    "TwelveLabs": {
+        "Video Input Cost": 0.0,
+        "Analyzed Video Cost": total_analyze_queries * (avg_video_duration / 60) * twelvelabs_pricing["video"],
+        "Video Indexing Cost": index_video_hours * twelvelabs_pricing["video"],
+        "Text Output Cost": total_analyze_queries * avg_output_tokens * twelvelabs_pricing["output"]
+    }
+}
+breakdown_data["TwelveLabs"]["Total Cost"] = sum(breakdown_data["TwelveLabs"].values())
 
 for name in selected_competitors:
     model = competitor_pricing[name]
-    comp_cost = {
-        "Indexing Cost": index_video_hours * model["video"],
-        "Output Token Cost": total_analyze_queries * avg_output_tokens / 1_000_000 * model["output"]
+    breakdown_data[name] = {
+        "Video Input Cost": total_analyze_queries * (avg_video_duration / 60) * model["video"],
+        "Analyzed Video Cost": 0.0,
+        "Video Indexing Cost": 0.0,
+        "Text Output Cost": total_analyze_queries * avg_output_tokens / 1_000_000 * model["output"]
     }
-    comp_cost["Total Cost"] = sum(comp_cost.values())
-    comparison[name] = comp_cost
+    breakdown_data[name]["Total Cost"] = sum(breakdown_data[name].values())
 
-# Display Table
-df = pd.DataFrame(comparison).T
-st.header("💡 Estimated Cost Comparison")
-st.dataframe(df.style.format("${:,.2f}"))
+breakdown_df = pd.DataFrame(breakdown_data).T
+
+# Prepare Total Cost Table
+total_cost_df = breakdown_df[["Total Cost"]].T
+
+# Display Tables
+st.header("🔍 Unit Price Comparison")
+st.dataframe(unit_price_df.style.format("${:,.2f}"))
+
+st.header("🧮 Cost Breakdown")
+st.dataframe(breakdown_df.style.format("${:,.2f}"))
+
+st.header("📊 Total Cost")
+st.dataframe(total_cost_df.style.format("${:,.2f}"))
