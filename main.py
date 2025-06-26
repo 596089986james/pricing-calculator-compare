@@ -84,7 +84,7 @@ for name in selected_competitors:
     video_input = total_video_hours * model.get("video", 0.0)
     analyzed_input = (
         total_analyze_queries * avg_input_tokens / 1_000_000 * model.get("input", 0.0) +
-        total_analyze_queries * (avg_video_duration / 60) * model["input"]
+        total_analyze_queries * (avg_video_duration / 60) * model.get("input", 0.0)
     )
     output_cost = total_analyze_queries * avg_output_tokens / 1_000_000 * model.get("output", 0.0)
     video_input_row.append(video_input)
