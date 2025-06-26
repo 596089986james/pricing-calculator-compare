@@ -9,9 +9,9 @@ st.caption("Compare estimated costs for analyzing video content across different
 st.sidebar.header("Input Parameters")
 index_video_hours = st.sidebar.number_input("Index Video Hours", min_value=0, value=1000, step=100)
 total_analyze_queries = st.sidebar.number_input("Total Analyze Queries", min_value=0, value=10000, step=100)
+avg_input_tokens = st.sidebar.number_input("Avg Input Tokens per Analyze (Competitor)", min_value=0, value=200)
 avg_video_duration = st.sidebar.number_input("Avg Video Duration (min)", min_value=1, value=10)
-avg_output_tokens = st.sidebar.number_input("Avg Output Tokens per Analyze", min_value=0, value=1000)
-avg_input_tokens = st.sidebar.number_input("Avg Input Tokens per Analyze (Competitor)", min_value=0, value=100)
+avg_output_tokens = st.sidebar.number_input("Avg Output Tokens per Analyze", min_value=0, value=100)
 
 # Competitor Model Pricing
 competitor_pricing = {
@@ -38,16 +38,16 @@ all_models = ["TwelveLabs"] + selected_competitors
 
 # Prepare Unit Price Comparison Table
 unit_price_data = {
+    "Video Indexing ($/hr)": [twelvelabs_pricing["index"]],
     "Video Input ($/hr)": [0.0],
     "Analyzed Video ($/hr or $/M tokens)": [twelvelabs_pricing["video"]],
-    "Video Indexing ($/hr)": [twelvelabs_pricing["index"]],
     "Text Output ($/1M tokens)": [7.5],
 }
 for name in selected_competitors:
     model = competitor_pricing[name]
+    unit_price_data["Video Indexing ($/hr)"].append(0.0)
     unit_price_data["Video Input ($/hr)"].append(model["video"])
     unit_price_data["Analyzed Video ($/hr or $/M tokens)"].append(model["input"])
-    unit_price_data["Video Indexing ($/hr)"].append(0.0)
     unit_price_data["Text Output ($/1M tokens)"].append(model["output"])
 unit_price_df = pd.DataFrame(unit_price_data, index=all_models).T
 
