@@ -26,8 +26,8 @@ competitor_pricing = {
 
 # TwelveLabs Pricing
 twelvelabs_pricing = {
-    "video": 2.5,  # $/hr for analyzed video
-    "index": 1.25,  # $/hr for indexing
+    "video": 1.25,  # $/hr for analyzed video
+    "index": 2.5,  # $/hr for indexing
     "output": 7.5 / 1_000_000  # $/token
 }
 
