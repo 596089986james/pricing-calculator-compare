@@ -63,7 +63,7 @@ total_row = [sum([video_indexing_row[0], video_input_row[0], analyzed_video_row[
 for name in selected_competitors:
     model = competitor_pricing[name]
     video_indexing_row.append(0.0)
-    video_input = total_analyze_queries * (avg_video_duration / 60) * model["video"]
+    video_input = total_video_hours * model["video"]
     analyzed_input = total_analyze_queries * avg_input_tokens / 1_000_000 * model["input"]
     output_cost = total_analyze_queries * avg_output_tokens / 1_000_000 * model["output"]
     video_input_row.append(video_input)
