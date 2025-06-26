@@ -9,7 +9,7 @@ st.caption("Compare estimated costs for analyzing video content across different
 st.sidebar.header("Input Parameters")
 index_video_hours = st.sidebar.number_input("Index Video Hours", min_value=0, value=1000, step=100)
 total_analyze_queries = st.sidebar.number_input("Total Analyze Queries", min_value=0, value=10000, step=100)
-avg_input_tokens = st.sidebar.number_input("Avg Input Tokens per Analyze (Competitor)", min_value=0, value=200)
+avg_input_tokens = st.sidebar.number_input("Avg Input Tokens per Analyze", min_value=0, value=200)
 avg_video_duration = st.sidebar.number_input("Avg Video Duration (min)", min_value=1, value=10)
 avg_output_tokens = st.sidebar.number_input("Avg Output Tokens per Analyze", min_value=0, value=100)
 
