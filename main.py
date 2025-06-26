@@ -85,8 +85,6 @@ breakdown_df = pd.DataFrame({
     "Total Cost": total_row,
 }, index=all_models).T
 
-# Prepare Total Cost Table
-total_cost_df = pd.DataFrame({model: [cost] for model, cost in zip(all_models, total_row)}, index=["Total Cost"])
 
 # Display Tables
 st.header("🔍 Unit Price Comparison")
@@ -95,5 +93,3 @@ st.dataframe(unit_price_df.style.format("${:,.2f}"))
 st.header("🧮 Cost Breakdown")
 st.dataframe(breakdown_df.style.format("${:,.2f}"))
 
-st.header("📊 Total Cost")
-st.dataframe(total_cost_df.style.format("${:,.2f}"))
