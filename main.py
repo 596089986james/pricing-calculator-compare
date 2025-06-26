@@ -47,7 +47,7 @@ unit_price_data = {
 for name in selected_competitors:
     model = competitor_pricing[name]
     unit_price_data["Video Indexing ($/hr)"].append(0.0)
-    combined_input_price = model["video"] + model["input"]
+    combined_input_price = model["input"]
     unit_price_data["Analyzed Video Cost ($/hr + $/M tokens)"].append(combined_input_price)
     unit_price_data["Text Output ($/1M tokens)"].append(model["output"])
 
