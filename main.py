@@ -41,14 +41,14 @@ all_models = ["TwelveLabs"] + selected_competitors
 # Prepare Unit Price Comparison Table
 unit_price_data = {
     "Video Indexing ($/hr)": [twelvelabs_pricing["index"]],
-    "Combined Input ($/hr + $/M tokens)": [1.25],
+    "Analyzed Video Cost ($/hr + $/M tokens)": [twelvelabs_pricing["video"]],
     "Text Output ($/1M tokens)": [7.5],
 }
 for name in selected_competitors:
     model = competitor_pricing[name]
     unit_price_data["Video Indexing ($/hr)"].append(0.0)
     combined_input_price = model["video"] + model["input"]
-    unit_price_data["Combined Input ($/hr + $/M tokens)"].append(combined_input_price)
+    unit_price_data["Analyzed Video Cost ($/hr + $/M tokens)"].append(combined_input_price)
     unit_price_data["Text Output ($/1M tokens)"].append(model["output"])
 
 unit_price_df = pd.DataFrame(unit_price_data, index=all_models).T
@@ -71,10 +71,13 @@ for name in selected_competitors:
     text_output_row.append(output_cost)
     total_row.append(video_input + analyzed_input + output_cost)
 
+analyzed_combined_row = [analyzed_video_row[0] + video_input_row[0]]
+for i in range(1, len(all_models)):
+    analyzed_combined_row.append(analyzed_video_row[i] + video_input_row[i])
+
 breakdown_df = pd.DataFrame({
     "Video Indexing Cost": video_indexing_row,
-    "Video Input Cost": video_input_row,
-    "Analyzed Video Cost": analyzed_video_row,
+    "Analyzed Video Cost": analyzed_combined_row,
     "Text Output Cost": text_output_row,
     "Total Cost": total_row,
 }, index=all_models).T
