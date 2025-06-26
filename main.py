@@ -15,15 +15,17 @@ avg_video_duration = st.sidebar.number_input("Avg Video Duration (min)", min_val
 total_video_hours = (num_videos * avg_video_duration) / 60
 st.sidebar.markdown(f"**Total Video Hours:** {total_video_hours:.2f} hr")
 
+total_analyze_queries = st.sidebar.number_input("Total Analyze Queries", min_value=0, value=10000, step=100)
+avg_input_tokens = st.sidebar.number_input("Avg Input Tokens per Analyze", min_value=0, value=200)
+avg_output_tokens = st.sidebar.number_input("Avg Output Tokens per Analyze", min_value=0, value=100)
+
 # Embedding Inputs at bottom
 st.sidebar.divider()
 st.sidebar.subheader("Embedding Usage")
 embed_video_hours = st.sidebar.number_input("Video Embedding (hrs)", min_value=0.0, value=0.0, step=1.0)
 embed_image_k = st.sidebar.number_input("Image Embedding (per 1k)", min_value=0.0, value=0.0, step=100.0)
 embed_text_k = st.sidebar.number_input("Text Embedding (per 1k)", min_value=0.0, value=0.0, step=100.0)
-total_analyze_queries = st.sidebar.number_input("Total Analyze Queries", min_value=0, value=10000, step=100)
-avg_input_tokens = st.sidebar.number_input("Avg Input Tokens per Analyze", min_value=0, value=200)
-avg_output_tokens = st.sidebar.number_input("Avg Output Tokens per Analyze", min_value=0, value=100)
+
 
 # Competitor Model Pricing
 competitor_pricing = {
