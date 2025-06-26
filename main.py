@@ -22,8 +22,8 @@ avg_output_tokens = st.sidebar.number_input("Avg Output Tokens per Analyze", min
 st.sidebar.divider()
 st.sidebar.subheader("Embedding Usage")
 embed_video_hours = st.sidebar.number_input("Video Embedding (hrs)", min_value=0.0, value=0.0, step=1.0)
-embed_image_k = st.sidebar.number_input("Image Embedding (per 1k)", min_value=0.0, value=0.0, step=100.0)
-embed_text_k = st.sidebar.number_input("Text Embedding (per 1k)", min_value=0.0, value=0.0, step=100.0)
+embed_image_k = st.sidebar.number_input("Image Embedding (thousands)", min_value=0.0, value=0.0, step=1.0)
+embed_text_k = st.sidebar.number_input("Text Embedding (thousands)", min_value=0.0, value=0.0, step=1.0)
 
 # Competitor Model Pricing
 competitor_pricing = {
