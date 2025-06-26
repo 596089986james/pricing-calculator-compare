@@ -14,7 +14,6 @@ num_videos = st.sidebar.number_input("Number of Videos", min_value=0, value=6000
 avg_video_duration = st.sidebar.number_input("Avg Video Duration (min)", min_value=1, value=10)
 total_video_hours = (num_videos * avg_video_duration) / 60
 st.sidebar.markdown(f"**Total Video Hours:** {total_video_hours:.2f} hr")
-
 total_analyze_queries = st.sidebar.number_input("Total Analyze Queries", min_value=0, value=10000, step=100)
 avg_input_tokens = st.sidebar.number_input("Avg Input Tokens per Analyze", min_value=0, value=200)
 avg_output_tokens = st.sidebar.number_input("Avg Output Tokens per Analyze", min_value=0, value=100)
@@ -63,7 +62,7 @@ unit_price_data = {
 for name in selected_competitors:
     model = competitor_pricing[name]
     unit_price_data["Video Indexing ($/hr)"].append(0.0)
-    combined_input_price = model["input"]  # use only one consistent unit price as specified
+    combined_input_price = model.get("input", 0.0)  # use default 0 if input price not provided  # use only one consistent unit price as specified
     unit_price_data["Analyzed Video Cost ($/hr + $/M tokens)"].append(combined_input_price)
     unit_price_data["Text Output ($/1M tokens)"].append(model.get("output", 0.0))
     unit_price_data["Embedding Video ($/hr)"].append(model.get("embed_video", 0.0))
