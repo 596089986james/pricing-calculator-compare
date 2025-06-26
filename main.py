@@ -88,6 +88,8 @@ breakdown_df = pd.DataFrame({
     "Text Output Cost": ttext_output_row,
     "Embedding Cost": tembed_costs,
 }, index=all_models).T
+# Add Total Cost as last row
+breakdown_df.loc["Total Cost"] = breakdown_df.sum()
 
 # Display Tables
 st.header("🔍 Unit Price Comparison")
@@ -96,8 +98,3 @@ st.dataframe(unit_price_df.style.format("${:,.2f}"))
 st.header("🧮 Cost Breakdown")
 st.dataframe(breakdown_df.style.format("${:,.2f}"))
 
-# Total Cost Table
-total_costs = breakdown_df.sum()
-total_cost_df = pd.DataFrame(total_costs).T
-st.header("📊 Total Cost")
-st.dataframe(total_cost_df.style.format("${:,.2f}"))
