@@ -9,7 +9,7 @@ st.caption("Compare estimated costs for analyzing video content across different
 st.sidebar.header("Input Parameters")
 index_video_hours = st.sidebar.number_input("Index Video Hours", min_value=0, value=1000, step=100)
 total_analyze_queries = st.sidebar.number_input("Total Analyze Queries", min_value=0, value=10000, step=100)
-avg_input_tokens = st.sidebar.number_input("Avg Input Tokens per Analyze", min_value=0, value=200)
+avg_input_tokens = st.sidebar.number_input("Avg Input Tokens per Analyze (Competitor)", min_value=0, value=200)
 avg_video_duration = st.sidebar.number_input("Avg Video Duration (min)", min_value=1, value=10)
 avg_output_tokens = st.sidebar.number_input("Avg Output Tokens per Analyze", min_value=0, value=100)
 
@@ -26,7 +26,7 @@ competitor_pricing = {
 
 # TwelveLabs Pricing
 twelvelabs_pricing = {
-    "video": 1.25,  # $/hr for analyzed video
+    "video": 2.5,  # $/hr for analyzed video
     "index": 2.5,  # $/hr for indexing
     "output": 7.5 / 1_000_000  # $/token
 }
@@ -61,7 +61,7 @@ total_row = [sum([video_indexing_row[0], video_input_row[0], analyzed_video_row[
 for name in selected_competitors:
     model = competitor_pricing[name]
     video_indexing_row.append(0.0)
-    video_input = index_video_hours * model["video"]
+    video_input = total_analyze_queries * (avg_video_duration / 60) * model["video"]
     analyzed_input = total_analyze_queries * avg_input_tokens / 1_000_000 * model["input"]
     output_cost = total_analyze_queries * avg_output_tokens / 1_000_000 * model["output"]
     video_input_row.append(video_input)
