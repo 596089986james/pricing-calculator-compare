@@ -95,3 +95,9 @@ st.dataframe(unit_price_df.style.format("${:,.2f}"))
 
 st.header("🧮 Cost Breakdown")
 st.dataframe(breakdown_df.style.format("${:,.2f}"))
+
+# Total Cost Table
+total_costs = breakdown_df.sum()
+total_cost_df = pd.DataFrame(total_costs).T
+st.header("📊 Total Cost")
+st.dataframe(total_cost_df.style.format("${:,.2f}"))
