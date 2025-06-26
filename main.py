@@ -11,6 +11,7 @@ index_video_hours = st.sidebar.number_input("Index Video Hours", min_value=0, va
 total_analyze_queries = st.sidebar.number_input("Total Analyze Queries", min_value=0, value=10000, step=100)
 avg_video_duration = st.sidebar.number_input("Avg Video Duration (min)", min_value=1, value=10)
 avg_output_tokens = st.sidebar.number_input("Avg Output Tokens per Analyze", min_value=0, value=1000)
+avg_input_tokens = st.sidebar.number_input("Avg Input Tokens per Analyze (Competitor)", min_value=0, value=100)
 
 # Competitor Model Pricing
 competitor_pricing = {
@@ -25,7 +26,8 @@ competitor_pricing = {
 
 # TwelveLabs Pricing
 twelvelabs_pricing = {
-    "video": 2.5,  # $/hr
+    "video": 2.5,  # $/hr for analyzed video
+    "index": 2.5,  # $/hr for indexing
     "output": 7.5 / 1_000_000  # $/token
 }
 
@@ -37,37 +39,40 @@ all_models = ["TwelveLabs"] + selected_competitors
 # Prepare Unit Price Comparison Table
 unit_price_data = {
     "Video Input ($/hr)": [0.0],
-    "Analyzed Video ($/hr)": [twelvelabs_pricing["video"]],
+    "Analyzed Video ($/hr or $/M tokens)": [twelvelabs_pricing["video"]],
+    "Video Indexing ($/hr)": [twelvelabs_pricing["index"]],
     "Text Output ($/1M tokens)": [7.5],
 }
 for name in selected_competitors:
     model = competitor_pricing[name]
     unit_price_data["Video Input ($/hr)"].append(model["video"])
-    unit_price_data["Analyzed Video ($/hr)"].append(0.0)
+    unit_price_data["Analyzed Video ($/hr or $/M tokens)"].append(model["input"])
+    unit_price_data["Video Indexing ($/hr)"].append(0.0)
     unit_price_data["Text Output ($/1M tokens)"].append(model["output"])
 unit_price_df = pd.DataFrame(unit_price_data, index=all_models).T
 
 # Prepare Cost Breakdown Table
+video_indexing_row = [index_video_hours * twelvelabs_pricing["index"]]
 video_input_row = [0.0]
 analyzed_video_row = [total_analyze_queries * (avg_video_duration / 60) * twelvelabs_pricing["video"]]
-video_indexing_row = [index_video_hours * twelvelabs_pricing["video"]]
 text_output_row = [total_analyze_queries * avg_output_tokens * twelvelabs_pricing["output"]]
-total_row = [video_input_row[0] + analyzed_video_row[0] + video_indexing_row[0] + text_output_row[0]]
+total_row = [sum([video_indexing_row[0], video_input_row[0], analyzed_video_row[0], text_output_row[0]])]
 
 for name in selected_competitors:
     model = competitor_pricing[name]
-    video_input = total_analyze_queries * (avg_video_duration / 60) * model["video"]
-    analyzed_video_row.append(0.0)
     video_indexing_row.append(0.0)
-    text_output = total_analyze_queries * avg_output_tokens / 1_000_000 * model["output"]
+    video_input = total_analyze_queries * (avg_video_duration / 60) * model["video"]
+    analyzed_input = total_analyze_queries * avg_input_tokens / 1_000_000 * model["input"]
+    output_cost = total_analyze_queries * avg_output_tokens / 1_000_000 * model["output"]
     video_input_row.append(video_input)
-    text_output_row.append(text_output)
-    total_row.append(video_input + text_output)
+    analyzed_video_row.append(analyzed_input)
+    text_output_row.append(output_cost)
+    total_row.append(video_input + analyzed_input + output_cost)
 
 breakdown_df = pd.DataFrame({
+    "Video Indexing Cost": video_indexing_row,
     "Video Input Cost": video_input_row,
     "Analyzed Video Cost": analyzed_video_row,
-    "Video Indexing Cost": video_indexing_row,
     "Text Output Cost": text_output_row,
     "Total Cost": total_row,
 }, index=all_models).T
