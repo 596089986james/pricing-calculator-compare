@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 st.set_page_config(page_title="Competitor Pricing Comparison", layout="wide")
-st.title("TwelveLabs vs Competitor Pricing Calculator")
+st.title("Pegasus vs Competitor Pricing Calculator")
 st.caption("Compare estimated costs for analyzing video content across different models.")
 
 # User Inputs
@@ -14,7 +14,7 @@ avg_video_duration = st.sidebar.number_input("Avg Video Duration (min)", min_val
 total_video_hours = (num_videos * avg_video_duration) / 60
 st.sidebar.markdown(f"**Total Video Hours:** {total_video_hours:.2f} hr")
 
-total_analyze_queries = st.sidebar.number_input("Total Analyze Queries", min_value=0, value=10000, step=100)
+total_analyze_queries = st.sidebar.number_input("Total Analyze Queries", min_value=0, value=30000, step=100)
 avg_input_tokens = st.sidebar.number_input("Avg Input Tokens per Analyze", min_value=0, value=200)
 avg_output_tokens = st.sidebar.number_input("Avg Output Tokens per Analyze", min_value=0, value=100)
 
@@ -57,7 +57,7 @@ all_models = ["TwelveLabs"] + selected_competitors
 # Unit Price Comparison
 tunit_price_data = {
     "Video Indexing ($/hr)": [twelvelabs_pricing["index"]],
-    "Analyzed Video Cost ($/hr + $/M tokens)": [twelvelabs_pricing["video"]],
+    "Analyzed Video Cost ($/hr or $/M tokens)": [twelvelabs_pricing["video"]],
     "Text Output ($/1M tokens)": [7.5],
     "Embedding Video ($/hr)": [2.5],
     "Embedding Image ($/1k)": [0.1],
