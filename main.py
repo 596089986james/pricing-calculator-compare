@@ -6,9 +6,7 @@ st.set_page_config(page_title="Model Pricing Calculator", layout="centered")
 st.title("TwelveLabs - Estimate Pricing Calculator")
 st.caption("For more accurate pricing and advanced usage, please contact the finance team.")
 
-# ---------------------
 # Default Pricing
-# ---------------------
 default_pricing = {
     "index_cost_per_hour": 2.500,
     "infra_unit_price": 0.090,
@@ -23,99 +21,48 @@ default_pricing = {
     "input_video_seconds_price": 0.00035
 }
 
-# ---------------------
 # Sidebar Inputs
-# ---------------------
 st.sidebar.image("marengo.png", use_container_width=True)
-marengo_video_hours = st.sidebar.number_input(
-    "Marengo - Video Hours", min_value=0, step=100, value=10000, format="%d"
-)
-marengo_search_calls = st.sidebar.number_input(
-    "Marengo - Daily Search API Calls", min_value=0, step=100, value=2000, format="%d"
-)
+marengo_video_hours = st.sidebar.number_input("Marengo - Video Hours", min_value=0, step=100, value=10000, format="%d")
+marengo_search_calls = st.sidebar.number_input("Marengo - Daily Search API Calls", min_value=0, step=100, value=2000, format="%d")
 
 st.sidebar.image("pegasus.png", use_container_width=True)
-pegasus_video_hours = st.sidebar.number_input(
-    "Pegasus - Video Hours", min_value=0, step=100, value=10000, format="%d"
-)
-pegasus_generate_calls = st.sidebar.number_input(
-    "Pegasus - Daily Generate API Calls", min_value=0, step=100, value=2000, format="%d"
-)
-pegasus_output_tokens_per_call = st.sidebar.number_input(
-    "Pegasus - Output Tokens per Call", min_value=0, step=1, value=200, format="%d"
-)
+pegasus_video_hours = st.sidebar.number_input("Pegasus - Video Hours", min_value=0, step=100, value=10000, format="%d")
+pegasus_generate_calls = st.sidebar.number_input("Pegasus - Daily Generate API Calls", min_value=0, step=100, value=2000, format="%d")
+pegasus_output_tokens_per_call = st.sidebar.number_input("Pegasus - Output Tokens per Call", min_value=0, step=1, value=200, format="%d")
 
-average_video_length_sec = st.sidebar.number_input(
-    "Average Video Length (sec)", min_value=1, step=1, value=90, format="%d"
-)
+average_video_length_sec = st.sidebar.number_input("Average Video Length (sec)", min_value=1, step=1, value=90, format="%d")
 
 # Contract Inputs
 st.sidebar.header("Contract Setting")
-contract_years = st.sidebar.number_input(
-    "Number of Contract Years", min_value=1, step=1, value=1, format="%d"
-)
+contract_years = st.sidebar.number_input("Number of Contract Years", min_value=1, step=1, value=1, format="%d")
 reindex_frequency = st.sidebar.number_input(
     "Reindex Frequency (per year)",
     min_value=0, step=1, value=0, format="%d",
-    help=(
-        "Number of times the video is expected to be reindexed each year. "
-        "Initial indexing is included in year 1."
-    )
+    help="Number of times the video is expected to be reindexed each year. Initial indexing is included in year 1."
 )
 
-# ---------------------
+# Embedding Inputs
+st.sidebar.header("🔍 Embedding Inputs")
+video_embeddings_h = st.sidebar.number_input("Video Embeddings (hour)", min_value=0, step=100, value=0, format="%d")
+audio_embeddings_h = st.sidebar.number_input("Audio Embeddings (hour)", min_value=0, step=100, value=0, format="%d")
+image_embeddings_1k = st.sidebar.number_input("Image Embeddings (per 1k)", min_value=0, step=100, value=0, format="%d")
+text_embeddings_1k = st.sidebar.number_input("Text Embeddings (per 1k)", min_value=0, step=100, value=0, format="%d")
+
 # Advanced Unit Pricing
-# ---------------------
 with st.expander("📊 Adjust Unit Pricing (Advanced)"):
     pricing = {}
-    pricing["index_cost_per_hour"] = st.number_input(
-        "Indexing ($/hr)",
-        value=default_pricing["index_cost_per_hour"],
-        format="%.3f"
-    )
-    pricing["infra_unit_price"] = st.number_input(
-        "Infra Fee ($/hr/mo)",
-        value=default_pricing["infra_unit_price"],
-        format="%.3f"
-    )
-    pricing["search_cost_per_call"] = st.number_input(
-        "Search API Call Cost ($/call)",
-        value=default_pricing["search_cost_per_call"],
-        format="%.3f"
-    )
-
+    pricing["index_cost_per_hour"] = st.number_input("Indexing ($/hr)", value=default_pricing["index_cost_per_hour"], format="%.3f")
+    pricing["infra_unit_price"] = st.number_input("Infra Fee ($/hr/mo)", value=default_pricing["infra_unit_price"], format="%.3f")
+    pricing["search_cost_per_call"] = st.number_input("Search API Call Cost ($/call)", value=default_pricing["search_cost_per_call"], format="%.3f")
     pricing["embedding_cost"] = {
-        "video": st.number_input(
-            "Video Embedding ($/hour)",
-            value=default_pricing["embedding_cost"]["video"],
-            format="%.3f"
-        ),
-        "audio": st.number_input(
-            "Audio Embedding ($/hour)",
-            value=default_pricing["embedding_cost"]["audio"],
-            format="%.3f"
-        ),
-        "image": st.number_input(
-            "Image Embedding ($/1k)",
-            value=default_pricing["embedding_cost"]["image"],
-            format="%.3f"
-        ),
-        "text": st.number_input(
-            "Text Embedding ($/1k)",
-            value=default_pricing["embedding_cost"]["text"],
-            format="%.3f"
-        ),
+        "video": st.number_input("Video Embedding ($/hour)", value=default_pricing["embedding_cost"]["video"], format="%.3f"),
+        "audio": st.number_input("Audio Embedding ($/hour)", value=default_pricing["embedding_cost"]["audio"], format="%.3f"),
+        "image": st.number_input("Image Embedding ($/1k)", value=default_pricing["embedding_cost"]["image"], format="%.3f"),
+        "text": st.number_input("Text Embedding ($/1k)", value=default_pricing["embedding_cost"]["text"], format="%.3f"),
     }
-
-    pricing["output_token_cost_pegasus"] = st.number_input(
-        "Pegasus Output Tokens ($/1M)", 
-        value=default_pricing["output_token_cost_pegasus"], format="%.3f"
-    )
-    pricing["input_video_seconds_price"] = st.number_input(
-        "Input Video Seconds ($/sec)",
-        value=default_pricing["input_video_seconds_price"],
-        format="%.5f"
-    )
+    pricing["output_token_cost_pegasus"] = st.number_input("Pegasus Output Tokens ($/1M)", value=default_pricing["output_token_cost_pegasus"], format="%.3f")
+    pricing["input_video_seconds_price"] = st.number_input("Input Video Seconds ($/sec)", value=default_pricing["input_video_seconds_price"], format="%.5f")
 
 # Helper for Embedding Costs
 def calculate_embedding_costs(times=1):
@@ -126,9 +73,7 @@ def calculate_embedding_costs(times=1):
         text_embeddings_1k * pricing["embedding_cost"]["text"] / 1000
     )
 
-# ---------------------
-# Yearly Breakdown (TwelveLabs)
-# ---------------------
+# Yearly Breakdown for TwelveLabs
 total_cost = 0
 for year in range(1, contract_years + 1):
     is_first_year = (year == 1)
@@ -138,19 +83,14 @@ for year in range(1, contract_years + 1):
 
     mar_index = marengo_video_hours * pricing["index_cost_per_hour"] if is_first_year else 0
     peg_index = pegasus_video_hours * pricing["index_cost_per_hour"] if is_first_year else 0
-
     mar_reindex = marengo_video_hours * pricing["index_cost_per_hour"] * mar_reindex_times
     peg_reindex = pegasus_video_hours * pricing["index_cost_per_hour"] * peg_reindex_times
 
     peg_input = (
-        pegasus_generate_calls * 365
-        * pricing["input_video_seconds_price"]
-        * average_video_length_sec
+        pegasus_generate_calls * 365 * pricing["input_video_seconds_price"] * average_video_length_sec
     )
     peg_output = (
-        pegasus_generate_calls * 365
-        * pegasus_output_tokens_per_call / 1_000_000
-        * pricing["output_token_cost_pegasus"]
+        pegasus_generate_calls * 365 * pegasus_output_tokens_per_call / 1000000 * pricing["output_token_cost_pegasus"]
     )
 
     mar_infra = marengo_video_hours * pricing["infra_unit_price"] * 12
@@ -186,22 +126,15 @@ for year in range(1, contract_years + 1):
 
     total_cost += marengo["Total"] + pegasus["Total"]
 
-# ---------------------
-# Final Total (TwelveLabs)
-# ---------------------
+# Final Total for TwelveLabs
 st.markdown("---")
 st.success(f"🎯 Total Estimated {contract_years}-Year Cost: ${total_cost:,.0f}")
 
-# ---------------------
 # Competitor Pricing Section
-# ---------------------
 st.header("⚔️ Competitor Pricing")
-
-# compute totals
 num_videos = pegasus_video_hours / (average_video_length_sec / 3600)
 total_queries = pegasus_generate_calls * 365 * contract_years
 
-# competitor unit rates
 competitor_pricing = {
     "Gemini 2.5 Pro (<=12 min)": {"video": 1.25, "output": 10},
     "Gemini 2.5 Pro (>12 min)":  {"video": 2.50, "output": 15},
@@ -214,14 +147,12 @@ competitor_pricing = {
 
 rows = {}
 for name, rates in competitor_pricing.items():
-    # every query re-ingests the full video
     video_cost = total_queries * (average_video_length_sec / 3600) * rates["video"]
-    token_cost = total_queries * pegasus_output_tokens_per_call / 1_000_000 * rates["output"]
-    total = video_cost + token_cost
+    token_cost = total_queries * pegasus_output_tokens_per_call / 1000000 * rates["output"]
     rows[name] = {
         "Video Cost": video_cost,
         "Output Token Cost": token_cost,
-        "Total": total
+        "Total": video_cost + token_cost
     }
 
 comp_df = pd.DataFrame(rows).T
