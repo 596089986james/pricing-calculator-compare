@@ -90,19 +90,19 @@ st.success(f"Total {contract_years}yr Cost: ${total_cost:,.0f}")
 # Competitor Pricing
 st.header("⚔️ Competitor Pricing")
 # totals
-n_videos = pegasus_video_hours/(average_video_length_sec/3600)
-q = pegasus_generate_calls*365*contract_years
+daily_queries = pegasus_generate_calls * 365 * contract_years
+total_videos = pegasus_video_hours / (average_video_length_sec / 3600)
 
 # Competitor rates
 rates = {
-    "Google Embed": {"embed_video":3.60, "embed_image":0.10, "embed_text":0.07},
-    "Gemini 2.5 Pro (<=12min)": {"analyze":1.25, "input_tok":1.25, "output_tok":10},
-    "Gemini 2.5 Pro (>12min)": {"analyze":2.50, "input_tok":2.50, "output_tok":15},
-    "Gemini Flash": {"analyze":0.30, "input_tok":0.30, "output_tok":2.50},
-    "GPT4.1-mini": {"analyze":0.40, "input_tok":0.40, "output_tok":1.00},
-    "GPT4.1": {"analyze":2.00, "input_tok":2.00, "output_tok":8.00},
-    "Nova Lite": {"analyze":0.06, "input_tok":0.06, "output_tok":0.24},
-    "Nova Pro": {"analyze":0.80, "input_tok":0.80, "output_tok":3.20},
+    "Google Embed": {"embed_video": 3.60, "embed_image": 0.10, "embed_text": 0.07},
+    "Gemini 2.5 Pro (<=12min)": {"analyze": 1.25, "input_tok": 1.25, "output_tok": 10},
+    "Gemini 2.5 Pro (>12min)": {"analyze": 2.50, "input_tok": 2.50, "output_tok": 15},
+    "Gemini Flash": {"analyze": 0.30, "input_tok": 0.30, "output_tok": 2.50},
+    "GPT4.1-mini": {"analyze": 0.40, "input_tok": 0.40, "output_tok": 1.00},
+    "GPT4.1": {"analyze": 2.00, "input_tok": 2.00, "output_tok": 8.00},
+    "Nova Lite": {"analyze": 0.06, "input_tok": 0.06, "output_tok": 0.24},
+    "Nova Pro": {"analyze": 0.80, "input_tok": 0.80, "output_tok": 3.20},
 }
 
 # Build unit pricing table
@@ -123,13 +123,13 @@ st.dataframe(unit_df.style.format("${:,.2f}"))
 # Build competitor cost breakdown
 costs = {}
 for name, r in rates.items():
-    video_cost = q * (average_video_length_sec/3600) * r.get("analyze", 0)
-    input_cost = q * pegasus_input_tokens_per_call/1e6 * r.get("input_tok", 0)
-    output_cost = q * pegasus_output_tokens_per_call/1e6 * r.get("output_tok", 0)
+    video_cost = daily_queries * (average_video_length_sec / 3600) * r.get("analyze", 0)
+    input_cost = daily_queries * pegasus_input_tokens_per_call / 1e6 * r.get("input_tok", 0)
+    output_cost = daily_queries * pegasus_output_tokens_per_call / 1e6 * r.get("output_tok", 0)
     embed_cost = (
-        n_videos * r.get("embed_video", 0)
-        + image_embeddings_1k * r.get("embed_image", 0)/1000
-        + text_embeddings_1k * r.get("embed_text", 0)/1000
+        total_videos * r.get("embed_video", 0)
+        + image_embeddings_1k * r.get("embed_image", 0) / 1000
+        + text_embeddings_1k * r.get("embed_text", 0) / 1000
     )
     costs[name] = {
         "Video Cost": video_cost,
@@ -141,4 +141,3 @@ for name, r in rates.items():
 ct_df = pd.DataFrame(costs).T
 st.subheader("Cost Breakdown")
 st.dataframe(ct_df.style.format("${:,.2f}"))
-
