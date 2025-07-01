@@ -4,6 +4,7 @@ import pandas as pd
 st.set_page_config(page_title="Competitor Pricing Compare", layout="centered")
 
 st.title("TwelveLabs - Competitor Pricing Compare")
+st.caption("For more accurate pricing and advanced usage, please contact the finance team.")
 
 # Default Pricing
 default_pricing = {
@@ -116,8 +117,8 @@ def calculate_embedding_costs(times=1):
     return times * (
         video_embeddings_h * pricing["embedding_cost"]["video"] +
         audio_embeddings_h * pricing["embedding_cost"]["audio"] +
-        image_embeddings_1k * pricing["embedding_cost"]["image"] / 1000 +
-        text_embeddings_1k * pricing["embedding_cost"]["text"] / 1000
+        (image_embeddings_1k * pricing["embedding_cost"]["image"]) / 1000 +
+        (text_embeddings_1k * pricing["embedding_cost"]["text"]) / 1000
     )
 
 # Yearly Breakdown for TwelveLabs
@@ -152,10 +153,69 @@ for year in range(1, contract_years + 1):
         "Infra": mar_infra,
         "Embedding": embedding_cost,
         "Input Prompts": 0,
-        "Output Tokens": 0,
+        "Output Tokens": 0
     }
     marengo["Total"] = sum(marengo.values())
 
     pegasus = {
         "Indexing": peg_index,
-        "Reindexing": peg
+        "Reindexing": peg_reindex,
+        "Infra": peg_infra,
+        "Search": 0,
+        "Embedding": 0,
+        "Input Prompts": peg_input,
+        "Output Tokens": peg_output
+    }
+    pegasus["Total"] = sum(pegasus.values())
+
+    df = pd.DataFrame({"Marengo": marengo, "Pegasus": pegasus})
+    st.header(f"📊 Cost Breakdown for Year {year}")
+    st.dataframe(df.style.format("${:,.0f}"))
+
+    total_cost += marengo["Total"] + pegasus["Total"]
+
+# Final Total for TwelveLabs
+st.markdown("---")
+st.success(f"🎯 Total Estimated {contract_years}-Year Cost: ${total_cost:,.0f}")
+
+# Competitor Pricing Section
+st.header("⚔️ Competitor Pricing")
+
+# Total counts
+num_videos = pegasus_video_hours / (average_video_length_sec / 3600)
+total_queries = pegasus_generate_calls * 365 * contract_years
+
+# Competitor unit rates
+competitor_pricing = {
+    "Google Embed": {"video": 3.60, "image": 0.10, "text": 0.07},
+    "Gemini 2.5 Pro (<=12 min)": {"video": 1.25, "output": 10},
+    "Gemini 2.5 Pro (>12 min)":  {"video": 2.50, "output": 15},
+    "Gemini 2.5 Flash":         {"video": 0.30, "output": 2.50},
+    "GPT 4.1-mini":              {"video": 0.40, "output": 1.00},
+    "GPT 4.1":                   {"video": 2.00, "output": 8.00},
+    "Nova Lite":                 {"video": 0.06, "output": 0.24},
+    "Nova Pro":                  {"video": 0.80, "output": 3.20}
+}
+
+# Show unit pricing# Show unit pricing\unit_df = pd.DataFrame(competitor_pricing).T.rename(columns={"video": "Video $/hr", "output": "Output $/1M tokens", "image": "Image Embed $/1k", "text": "Text Embed $/1k"})
+st.subheader("Unit Pricing")
+st.dataframe(unit_df.style.format("${:,.2f}"))
+
+# Compute and show cost breakdown
+rows = {}
+for name, rates in competitor_pricing.items():
+    video_cost = total_queries * (average_video_length_sec / 3600) * rates.get("video", 0)
+    token_cost = total_queries * pegasus_output_tokens_per_call / 1_000_000 * rates.get("output", 0)
+    embed_cost = (
+        video_embeddings_h * rates.get("video", 0) + image_embeddings_1k * rates.get("image", 0) / 1000 + text_embeddings_1k * rates.get("text", 0) / 1000
+    ) * contract_years
+    rows[name] = {
+        "Video Cost": video_cost,
+        "Output Token Cost": token_cost,
+        "Embedding Cost": embed_cost,
+        "Total": video_cost + token_cost + embed_cost
+    }
+
+comp_df = pd.DataFrame(rows).T
+st.subheader("Cost Breakdown")
+st.dataframe(comp_df.style.format("${:,.2f}"))
