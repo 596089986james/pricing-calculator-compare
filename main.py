@@ -1,9 +1,9 @@
 import streamlit as st
 import pandas as pd
 
-st.set_page_config(page_title="Model Pricing Calculator", layout="centered")
+st.set_page_config(page_title="Competitor Pricing Compare", layout="centered")
 
-st.title("TwelveLabs - Estimate Pricing Calculator")
+st.title("TwelveLabs - Competitor Pricing Compare")
 st.caption("For more accurate pricing and advanced usage, please contact the finance team.")
 
 # Default Pricing
