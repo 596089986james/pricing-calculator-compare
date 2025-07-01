@@ -24,6 +24,7 @@ marengo_search_calls = st.sidebar.number_input("Marengo - Daily Search API Calls
 st.sidebar.image("pegasus.png", use_container_width=True)
 pegasus_video_hours = st.sidebar.number_input("Pegasus - Video Hours", min_value=0, step=100, value=10000)
 pegasus_generate_calls = st.sidebar.number_input("Pegasus - Daily Generate API Calls", min_value=0, step=100, value=2000)
+pegasus_input_tokens_per_call = st.sidebar.number_input("Pegasus - Input Tokens per Call", min_value=0, step=1, value=200)
 pegasus_output_tokens_per_call = st.sidebar.number_input("Pegasus - Output Tokens per Call", min_value=0, step=1, value=200)
 
 average_video_length_sec = st.sidebar.number_input("Average Video Length (sec)", min_value=1, step=1, value=90)
@@ -45,9 +46,7 @@ text_embeddings_1k = st.sidebar.number_input("Text Embeddings (per 1k)", min_val
 
 # Advanced Pricing
 with st.expander("📊 Adjust Unit Pricing (Advanced)"):
-    pricing = {
-        **default_pricing
-    }
+    pricing = {**default_pricing}
     pricing["index_cost_per_hour"] = st.number_input("Indexing ($/hr)", value=pricing["index_cost_per_hour"], format="%.3f")
     pricing["infra_unit_price"] = st.number_input("Infra Fee ($/hr/mo)", value=pricing["infra_unit_price"], format="%.3f")
     pricing["search_cost_per_call"] = st.number_input("Search API Call ($/call)", value=pricing["search_cost_per_call"], format="%.3f")
@@ -71,19 +70,19 @@ def emb_cost(times=1):
 total_cost = 0
 for year in range(1, contract_years+1):
     first = (year==1)
-    reindex_times = reindex_frequency - (1 if first else 0)
+    reindex_times = max(0, reindex_frequency - (1 if first else 0))
     idx = pegasus_video_hours * pricing["index_cost_per_hour"] if first else 0
-    reidx = pegasus_video_hours * pricing["index_cost_per_hour"] * max(0,reindex_times)
+    reidx = pegasus_video_hours * pricing["index_cost_per_hour"] * reindex_times
     inp = pegasus_generate_calls*365 * pricing["input_video_seconds_price"] * average_video_length_sec
     outp = pegasus_generate_calls*365 * pegasus_output_tokens_per_call/1e6 * pricing["output_token_cost_pegasus"]
     infra = pegasus_video_hours*pricing["infra_unit_price"]*12
     emb = emb_cost(times=(1 if first else reindex_frequency))
-    df = pd.DataFrame({
-        "Pegasus": {"Index":idx, "Reindex":reidx, "Input":inp, "Output":outp, "Infra":infra, "Embedding":emb}
+    table = pd.DataFrame({
+        "Pegasus": {"Index":idx, "Reindex":reidx, "Input Prompts":inp, "Output Tokens":outp, "Infra":infra, "Embedding":emb}
     })
     st.header(f"Year {year} Breakdown")
-    st.dataframe(df.style.format("${:,.0f}"))
-    total_cost += df["Pegasus"].sum()
+    st.dataframe(table.style.format("${:,.0f}"))
+    total_cost += table["Pegasus"].sum()
 
 st.markdown("---")
 st.success(f"Total {contract_years}yr Cost: ${total_cost:,.0f}")
@@ -93,27 +92,53 @@ st.header("⚔️ Competitor Pricing")
 # totals
 n_videos = pegasus_video_hours/(average_video_length_sec/3600)
 q = pegasus_generate_calls*365*contract_years
+
+# Competitor rates
 rates = {
-    "Google Embed": {"hour":3.60, "img":0.10, "txt":0.07},
-    "Gemini 2.5 Pro (<=12min)":{"hour":1.25,"out":10},
-    "Gemini 2.5 Pro (>12min)":{"hour":2.50,"out":15},
-    "Gemini Flash":{"hour":0.30,"out":2.50},
-    "GPT4.1-mini":{"hour":0.40,"out":1.00},
-    "GPT4.1":{"hour":2.00,"out":8.00},
-    "Nova Lite":{"hour":0.06,"out":0.24},
-    "Nova Pro":{"hour":0.80,"out":3.20},
+    "Google Embed": {"embed_video":3.60, "embed_image":0.10, "embed_text":0.07},
+    "Gemini 2.5 Pro (<=12min)": {"analyze":1.25, "input_tok":1.25, "output_tok":10},
+    "Gemini 2.5 Pro (>12min)": {"analyze":2.50, "input_tok":2.50, "output_tok":15},
+    "Gemini Flash": {"analyze":0.30, "input_tok":0.30, "output_tok":2.50},
+    "GPT4.1-mini": {"analyze":0.40, "input_tok":0.40, "output_tok":1.00},
+    "GPT4.1": {"analyze":2.00, "input_tok":2.00, "output_tok":8.00},
+    "Nova Lite": {"analyze":0.06, "input_tok":0.06, "output_tok":0.24},
+    "Nova Pro": {"analyze":0.80, "input_tok":0.80, "output_tok":3.20},
 }
-# unit table
-unit = pd.DataFrame(rates).T.rename(columns={"hour":"Video $/hr","out":"Out $/1M","img":"Img Embed $/1k","txt":"Txt Embed $/1k"})
+
+# Build unit pricing table
+data = {}
+for name, r in rates.items():
+    data[name] = {
+        "Analyze $/hr": r.get("analyze", 0),
+        "Input $/1M tokens": r.get("input_tok", 0),
+        "Output $/1M tokens": r.get("output_tok", 0),
+        "Video Embed $/hr": r.get("embed_video", 0),
+        "Image Embed $/1k": r.get("embed_image", 0),
+        "Text Embed $/1k": r.get("embed_text", 0),
+    }
+unit_df = pd.DataFrame(data).T
 st.subheader("Unit Pricing")
-st.dataframe(unit.style.format("${:,.2f}"))
-# cost table
+st.dataframe(unit_df.style.format("${:,.2f}"))
+
+# Build competitor cost breakdown
 costs = {}
-for m,r in rates.items():
-    v_cost = q*(average_video_length_sec/3600)*r.get("hour",0)
-    t_cost = q*pegasus_output_tokens_per_call/1e6*r.get("out",0)
-    e_cost = n_videos*r.get("img",0)*image_embeddings_1k/1000 + n_videos*r.get("txt",0)*text_embeddings_1k/1000
-    costs[m] = {"Video":v_cost,"Tokens":t_cost,"Embed":e_cost,"Total":v_cost+t_cost+e_cost}
-ct = pd.DataFrame(costs).T
+for name, r in rates.items():
+    video_cost = q * (average_video_length_sec/3600) * r.get("analyze", 0)
+    input_cost = q * pegasus_input_tokens_per_call/1e6 * r.get("input_tok", 0)
+    output_cost = q * pegasus_output_tokens_per_call/1e6 * r.get("output_tok", 0)
+    embed_cost = (
+        n_videos * r.get("embed_video", 0)
+        + image_embeddings_1k * r.get("embed_image", 0)/1000
+        + text_embeddings_1k * r.get("embed_text", 0)/1000
+    )
+    costs[name] = {
+        "Video Cost": video_cost,
+        "Input Token Cost": input_cost,
+        "Output Token Cost": output_cost,
+        "Embedding Cost": embed_cost,
+        "Total": video_cost + input_cost + output_cost + embed_cost,
+    }
+ct_df = pd.DataFrame(costs).T
 st.subheader("Cost Breakdown")
-st.dataframe(ct.style.format("${:,.2f}"))
+st.dataframe(ct_df.style.format("${:,.2f}"))
+
