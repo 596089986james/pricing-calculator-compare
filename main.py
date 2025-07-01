@@ -71,18 +71,40 @@ total_cost = 0
 for year in range(1, contract_years+1):
     first = (year==1)
     reindex_times = max(0, reindex_frequency - (1 if first else 0))
-    idx = pegasus_video_hours * pricing["index_cost_per_hour"] if first else 0
-    reidx = pegasus_video_hours * pricing["index_cost_per_hour"] * reindex_times
-    inp = pegasus_generate_calls*365 * pricing["input_video_seconds_price"] * average_video_length_sec
-    outp = pegasus_generate_calls*365 * pegasus_output_tokens_per_call/1e6 * pricing["output_token_cost_pegasus"]
-    infra = pegasus_video_hours*pricing["infra_unit_price"]*12
-    emb = emb_cost(times=(1 if first else reindex_frequency))
-    table = pd.DataFrame({
-        "Pegasus": {"Index":idx, "Reindex":reidx, "Input Prompts":inp, "Output Tokens":outp, "Infra":infra, "Embedding":emb}
+    # Marengo costs
+    mar_index = marengo_video_hours * pricing["index_cost_per_hour"] if first else 0
+    mar_reindex = marengo_video_hours * pricing["index_cost_per_hour"] * reindex_times
+    mar_search = marengo_search_calls * pricing["search_cost_per_call"] * 365
+    mar_infra = marengo_video_hours * pricing["infra_unit_price"] * 12
+    mar_emb = emb_cost(times=(1 if first else reindex_frequency))
+    # Pegasus costs
+    peg_index = pegasus_video_hours * pricing["index_cost_per_hour"] if first else 0
+    peg_reindex = pegasus_video_hours * pricing["index_cost_per_hour"] * reindex_times
+    peg_input = pegasus_generate_calls*365 * pricing["input_video_seconds_price"] * average_video_length_sec
+    peg_output = pegasus_generate_calls*365 * pegasus_output_tokens_per_call/1e6 * pricing["output_token_cost_pegasus"]
+    peg_infra = pegasus_video_hours*pricing["infra_unit_price"]*12
+    peg_emb = emb_cost(times=(1 if first else reindex_frequency))
+
+    df = pd.DataFrame({
+        "Marengo": {
+            "Index": mar_index,
+            "Reindex": mar_reindex,
+            "Search": mar_search,
+            "Infra": mar_infra,
+            "Embedding": mar_emb
+        },
+        "Pegasus": {
+            "Index": peg_index,
+            "Reindex": peg_reindex,
+            "Input Prompts": peg_input,
+            "Output Tokens": peg_output,
+            "Infra": peg_infra,
+            "Embedding": peg_emb
+        }
     })
     st.header(f"Year {year} Breakdown")
-    st.dataframe(table.style.format("${:,.0f}"))
-    total_cost += table["Pegasus"].sum()
+    st.dataframe(df.style.format("${:,.0f}"))
+    total_cost += df["Marengo"].sum() + df["Pegasus"].sum()
 
 st.markdown("---")
 st.success(f"Total {contract_years}yr Cost: ${total_cost:,.0f}")
@@ -136,7 +158,7 @@ for name, r in rates.items():
         "Input Token Cost": input_cost,
         "Output Token Cost": output_cost,
         "Embedding Cost": embed_cost,
-        "Total": video_cost + input_cost + output_cost + embed_cost,
+        "Total": video_cost + input_cost + output_cost + embed_cost
     }
 ct_df = pd.DataFrame(costs).T
 st.subheader("Cost Breakdown")
