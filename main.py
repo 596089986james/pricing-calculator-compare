@@ -29,7 +29,8 @@ embed_text_k = st.sidebar.number_input("Text Embedding (thousands)", min_value=0
 st.sidebar.divider()
 contract_length = st.sidebar.number_input("Contract Length (months)", min_value=1, value=12, step=1)
 
-# Competitor Model Pricing\competitor_pricing = {
+# Competitor Model Pricing
+competitor_pricing = {
     "Google Embed": {"embed_video": 3.60, "embed_image": 0.10, "embed_text": 0.07},
     "Gemini 2.5 Pro (<=12min)": {"video": 1.25, "input": 1.25, "output": 10},
     "Gemini 2.5 Pro (>12min)": {"video": 2.50, "input": 2.50, "output": 15},
@@ -41,7 +42,7 @@ contract_length = st.sidebar.number_input("Contract Length (months)", min_value=
 }
 
 # TwelveLabs Pricing
-infra_rate = 0.09  # Hours indexed per month cost
+infra_rate = 0.09  # $ per hour indexed per month
 
 twelvelabs_pricing = {
     "video": 1.25,  # $/hr for analyzed video
@@ -61,7 +62,7 @@ tunit_price_data = {
     "Embedding Video ($/hr)": [2.5],
     "Embedding Image ($/1k)": [0.1],
     "Embedding Text ($/1k)": [0.07],
-    "Infra Cost (hrs indexed/mo)": [infra_rate]
+    "Infra Cost ($/hr indexed/mo)": [infra_rate]
 }
 for name in selected_competitors:
     model = competitor_pricing[name]
@@ -71,7 +72,8 @@ for name in selected_competitors:
     tunit_price_data["Embedding Video ($/hr)"].append(model.get("embed_video", 0.0))
     tunit_price_data["Embedding Image ($/1k)"].append(model.get("embed_image", 0.0))
     tunit_price_data["Embedding Text ($/1k)"].append(model.get("embed_text", 0.0))
-    tunit_price_data["Infra Cost (hrs indexed/mo)"].append(0.0)
+    tunit_price_data["Infra Cost ($/hr indexed/mo)"].append(0.0)
+
 unit_price_df = pd.DataFrame(tunit_price_data, index=all_models).T
 
 # Cost Breakdown
@@ -79,17 +81,22 @@ tvideo_indexing_row = [total_video_hours * twelvelabs_pricing["index"]]
 tanalyzed_video_row = [total_analyze_queries * (avg_video_duration / 60) * twelvelabs_pricing["video"]]
 ttext_output_row = [total_analyze_queries * avg_output_tokens * twelvelabs_pricing["output"]]
 tembed_costs = [embed_video_hours * 2.5 + embed_image_k * 0.1 + embed_text_k * 0.07]
-
-# Infra cost calculation
 tinfra_cost_row = [total_video_hours * infra_rate * contract_length]
 
 for name in selected_competitors:
     model = competitor_pricing[name]
     tvideo_indexing_row.append(0.0)
-    comp_analyze = (total_analyze_queries * avg_input_tokens / 1_000_000 + total_analyze_queries * (avg_video_duration / 60)) * model.get("input", 0.0)
+    comp_analyze = (
+        total_analyze_queries * avg_input_tokens / 1_000_000
+        + total_analyze_queries * (avg_video_duration / 60)
+    ) * model.get("input", 0.0)
     tanalyzed_video_row.append(comp_analyze)
     ttext_output_row.append(total_analyze_queries * avg_output_tokens / 1_000_000 * model.get("output", 0.0))
-    tembed_costs.append(embed_video_hours * model.get("embed_video", 0.0) + embed_image_k * model.get("embed_image", 0.0) + embed_text_k * model.get("embed_text", 0.0))
+    tembed_costs.append(
+        embed_video_hours * model.get("embed_video", 0.0)
+        + embed_image_k * model.get("embed_image", 0.0)
+        + embed_text_k * model.get("embed_text", 0.0)
+    )
     tinfra_cost_row.append(0.0)
 
 breakdown_df = pd.DataFrame({
@@ -99,7 +106,6 @@ breakdown_df = pd.DataFrame({
     "Embedding Cost": tembed_costs,
     "Infra Cost": tinfra_cost_row
 }, index=all_models).T
-# Add Total Cost as last row
 breakdown_df.loc["Total Cost"] = breakdown_df.sum()
 
 # Display Tables
