@@ -67,7 +67,7 @@ tunit_price_data = {
 for name in selected_competitors:
     model = competitor_pricing[name]
     tunit_price_data["Video Indexing ($/hr)"].append(0.0)
-    tunit_price_data["Analyzed Video Cost ($/hr + $/M tokens)"].append(model.get("input", 0.0))
+    tunit_price_data["Analyzed Video Cost ($/hr or $/M tokens)"].append(model.get("input", 0.0))
     tunit_price_data["Text Output ($/1M tokens)"].append(model.get("output", 0.0))
     tunit_price_data["Embedding Video ($/hr)"].append(model.get("embed_video", 0.0))
     tunit_price_data["Embedding Image ($/1k)"].append(model.get("embed_image", 0.0))
